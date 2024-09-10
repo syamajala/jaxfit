@@ -90,7 +90,7 @@ from numpy.linalg import norm
 import time
 from typing import Callable, Optional, Tuple, Union, List, Dict, Any, Sequence
 
-from jax.config import config
+from jax import config
 config.update("jax_enable_x64", True)
 import jax.numpy as jnp
 from jax.scipy.linalg import svd as jax_svd

@@ -4,7 +4,7 @@ import numpy as np
 import time
 from typing import Callable, Optional, Tuple, Union, Sequence, List, Any
 
-from jax.config import config
+from jax import config
 config.update("jax_enable_x64", True)
 import jax.numpy as jnp
 from jax import jit, jacfwd
