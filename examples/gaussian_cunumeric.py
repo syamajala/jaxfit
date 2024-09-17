@@ -18,6 +18,7 @@ from legate.core import (
     LegateDataInterface,
     LogicalStore,
     StoreTarget,
+    broadcast
     # VariantCode,  # TODO: introduced later
 )
 
@@ -35,7 +36,8 @@ def get_store(obj: LegateDataInterface) -> LogicalStore:
 
 def make_curve_fit_wrapper(fit_func, **kwargs):
 
-    @task(variants=tuple(KNOWN_VARIANTS))
+    @task(variants=tuple(KNOWN_VARIANTS),
+          constraints=(broadcast("xdata"), broadcast("ydata")))
     def curve_fit_wrapper(xdata: InputStore,
                           ydata: InputStore,
                           popt: OutputStore,
