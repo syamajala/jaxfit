@@ -14,9 +14,10 @@ import scipy
 from jaxfit import CurveFit
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from dlpack import asdlpack
+#from dlpack import asdlpack
 
 from legate.core.task import task, InputStore, OutputStore
+from legate.core._ext.task.util import KNOWN_VARIANTS
 from legate.core import (
     align,
     get_legate_runtime,
@@ -51,10 +52,7 @@ def gaussian(x, y, x0, y0, xalpha, yalpha, A, delta):
     yp = -(x-x0)*np.sin(delta) + (y-y0)*np.cos(delta)
     return A * np.exp( -(xp/xalpha)**2 -(yp/yalpha)**2)
 
-@task(
-    variants=("cpu", "gpu"),
-    throws_exception=True
-)
+@task(variants=tuple(KNOWN_VARIANTS))
 def curve_fit_wrapper(xdata: InputStore,
                       ydata: InputStore,
                       # p0: list,
@@ -79,13 +77,13 @@ def curve_fit_wrapper(xdata: InputStore,
         ydata_arr = cp.asarray(ydata.get_inline_allocation())
         popt_output, pcov = cf.curve_fit(_gaussian, xdata_arr, ydata_arr, p0=p0, bounds=bounds)
         popt_arr = cp.asarray(popt.get_inline_allocation())
+        popt_arr[:] = cp.asarray(popt_output)
     else:
         xdata_arr = nnp.asarray(xdata.get_inline_allocation())
         ydata_arr = nnp.asarray(ydata.get_inline_allocation())
         popt_output, pcov = cf.curve_fit(_gaussian, xdata_arr, ydata_arr, p0=p0, bounds=bounds)
         popt_arr = nnp.asarray(popt.get_inline_allocation())
-
-    popt_arr[:] = popt_output
+        popt_arr[:] = popt_output
 
 def curve_fit(xdata, ydata, p0, bounds, popt):
     curve_fit_wrapper(get_store(xdata),

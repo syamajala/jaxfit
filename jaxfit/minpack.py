@@ -5,7 +5,7 @@ from inspect import signature
 import time
 from typing import Optional, Callable, Tuple, Union, List, Dict, Any
 
-from jax.config import config
+from jax._src.config import config
 config.update("jax_enable_x64", True)
 
 import jax.numpy as jnp
@@ -357,7 +357,8 @@ class CurveFit():
         >>> plt.legend()
         >>> plt.show()
         """
-        
+        import cupy as cp
+
         if p0 is None:
             # determine number of parameters by inspecting the function
             sig = signature(f)
@@ -376,12 +377,16 @@ class CurveFit():
         if method is None:
             method = 'trf'
 
+        if isinstance(ydata, cp.ndarray):
+            ydata=ydata.get()
+        if isinstance(xdata, cp.ndarray):
+            xdata=xdata.get()
         # NaNs cannot be handled
         if check_finite:
             ydata = np.asarray_chkfinite(ydata, float)
         else:
             ydata = np.asarray(ydata, float)
-    
+
         if isinstance(xdata, (list, tuple, np.ndarray)):
             #should we be able to pass jax arrays
             # `xdata` is passed straight to the user-defined `f`, so allow
